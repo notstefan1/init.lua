@@ -18,11 +18,12 @@ vim.g.mapleader=" "
 keymap("i","jj","<esc>",defaultop)
 keymap("n","<leader>e",":Lexplore<CR>",defaultop)
 
-vim.cmd("let g:netrw_winsize=15")
+vim.cmd("let g:netrw_winsize=18")
 vim.cmd("let g:netrw_banner=0")
 vim.cmd("let g:netrw_liststyle=3")
 vim.cmd("let g:netrw_preview=1")
 vim.cmd("let g:netrw_keepdir=1")
+vim.cmd("let g:netrw_altv=1")
 
 require('packer').startup(function(use)
 	use 'wbthomason/packer.nvim'
@@ -64,6 +65,5 @@ local lsp = require('lsp-zero').preset({
   manage_nvim_cmp = true,
   suggest_lsp_servers = false,
 })
-
 lsp.nvim_workspace()
 lsp.setup()
