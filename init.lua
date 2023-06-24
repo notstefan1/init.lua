@@ -1,8 +1,4 @@
-vim.cmd("set number")
-vim.cmd("set relativenumber")
-vim.cmd("set tabstop=4")
 vim.cmd("set shiftwidth=4")
-vim.cmd("set cmdheight=0")
 vim.cmd("set autoindent")
 vim.cmd("set noswapfile")
 vim.cmd("syntax on")
@@ -15,7 +11,6 @@ local keymap=vim.api.nvim_set_keymap
 
 vim.g.mapleader=" "
 keymap("i","jj","<esc>",defaultop)
-keymap("n","<leader>e",":Lexplore<CR><CR>",defaultop)
 
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
@@ -40,11 +35,6 @@ require("lazy").setup({
 			vim.o.timeout = true
 			vim.o.timeoutlen = 300
 		end,
-		opts = {
-			-- your configuration comes here
-			-- or leave it empty to use the default settings
-			-- refer to the configuration section below
-		}
 	},
 	"VonHeikemen/lsp-zero.nvim",
 	"neovim/nvim-lspconfig",
@@ -54,12 +44,16 @@ require("lazy").setup({
 	"hrsh7th/cmp-nvim-lsp", -- Required
 	"L3MON4D3/LuaSnip",
 	{
-		'nvim-telescope/telescope.nvim', tag = '0.1.1',
-		dependencies = { 'nvim-lua/plenary.nvim' }
+		"nvim-telescope/telescope.nvim", tag = "0.1.1",
+		dependencies = { "nvim-lua/plenary.nvim" }
 	},
+	"bluz71/nvim-linefly",
+	"nvim-tree/nvim-web-devicons",
 	{
-		"nvim-telescope/telescope-file-browser.nvim",
-		dependencies = { "nvim-telescope/telescope.nvim", "nvim-lua/plenary.nvim" }
+		'numToStr/Comment.nvim',
+		config = function()
+			require('Comment').setup()
+		end
 	}
 })
 vim.cmd("colorscheme moonfly")
@@ -70,6 +64,17 @@ vim.keymap.set('n', '<leader>fg', builtin.live_grep, {})
 vim.keymap.set('n', '<leader>fb', builtin.buffers, {})
 vim.keymap.set('n', '<leader>fh', builtin.help_tags, {})
 
+local wk=require("which-key")
+wk.register({
+	f = {
+		name = "file",
+		f = "Find File",
+		g = "Live Grep",
+		b = "Buffers",
+		h = "Help Tags"
+	},
+}, { prefix = "<leader>" })
+
 require("telescope").setup {
 	extensions = {
 		file_browser = {
@@ -77,9 +82,6 @@ require("telescope").setup {
 		}
 	}
 }
-require("telescope").load_extension "file_browser"
-keymap("n","<leader>e",":Telescope file_browser<CR>",defaultop)
-
 
 require'nvim-treesitter.configs'.setup {
 	highlight = {
@@ -88,11 +90,55 @@ require'nvim-treesitter.configs'.setup {
 	},
 }
 
+require'nvim-web-devicons'.setup {
+	override = {
+		zsh = {
+			icon = "",
+			color = "#428850",
+			cterm_color = "65",
+			name = "Zsh"
+		}
+	};
+	color_icons = true;
+	default = true;
+	strict = true;
+	override_by_filename = {
+		[".gitignore"] = {
+			icon = "",
+			color = "#f1502f",
+			name = "Gitignore"
+		}
+	};
+	override_by_extension = {
+		["log"] = {
+			icon = "",
+			color = "#81e043",
+			name = "Log"
+		}
+	};
+}
+
 local lsp = require('lsp-zero').preset({})
 lsp.extend_cmp()
-lsp.on_attach(function(client, bufnr)
-	lsp.default_keymaps({buffer = bufnr})
-end)
+vim.api.nvim_create_autocmd('LspAttach', {
+	desc = 'LSP actions',
+	callback = function(event)
+		local opts = {buffer = event.buf}
+		vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', opts)
+		vim.keymap.set('n', '<leader>vd', '<cmd>lua vim.lsp.buf.definition()<cr>', opts)
+		vim.keymap.set('n', '<leader>vD', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
+		vim.keymap.set('n', '<leader>vi', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
+		vim.keymap.set('n', '<leader>vo', '<cmd>lua vim.lsp.buf.type_definition()<cr>', opts)
+		vim.keymap.set('n', '<leader>vr', '<cmd>lua vim.lsp.buf.references()<cr>', opts)
+		vim.keymap.set('n', '<leader>vs', '<cmd>lua vim.lsp.buf.signature_help()<cr>', opts)
+		vim.keymap.set('n', '<F2>', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
+		vim.keymap.set({'n', 'x'}, '<F3>', '<cmd>lua vim.lsp.buf.format({async = true})<cr>', opts)
+		vim.keymap.set('n', '<leader>va', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
+		vim.keymap.set('n', '<leader>vl', '<cmd>lua vim.diagnostic.open_float()<cr>', opts)
+		vim.keymap.set('n', '[d', '<cmd>lua vim.diagnostic.goto_prev()<cr>', opts)
+		vim.keymap.set('n', ']d', '<cmd>lua vim.diagnostic.goto_next()<cr>', opts) 
+	end
+})
 
 require('lspconfig').lua_ls.setup(lsp.nvim_lua_ls())
 lsp.setup()
